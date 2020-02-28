@@ -125,14 +125,14 @@ class Minesweeper:
 
         return all_neighbors
 
-    def mark_flag(self, row_index, col_index):
+    def add_flag(self, row_index, col_index):
         """
         Place a flag in any valid cell on shown gameboard
         """
         if self._is_valid(row_index, col_index) and self.shown_gameboard[row_index][col_index] == "HIDDEN":
             self.shown_gameboard[row_index][col_index] = "FLAG"
             self.number_of_flags += 1
-            print(f"Flag marked at ({row_index}, {col_index})")
+            print(f"Flag added at ({row_index}, {col_index})")
         else:
             print(
                 f"({row_index}, {col_index}) not a valid cell to add flag. Please enter valid x and y coordinates")
@@ -151,16 +151,29 @@ class Minesweeper:
     def reveal_hidden_cell(self, row_index, col_index):
         """
         Reveals cell on obfuscated gameboard.
-        If cell is mine: gameover
+        If invalid: do nothing
         If cell is flagged: nothing will happen (prompt to remove flag)
-        If not flagged, not mine:
+        If cell is mine: gameover
+        If not flagged, not mine: update cell value to adjacency count
         """
+        if self._is_valid(row_index, col_index) == False:
+            print(f"({row_index},{col_index}) not on board, please enter valid cell")
+            return
+        if self.shown_gameboard[row_index][col_index] == "FLAG":
+            print(f"({row_index},{col_index}) is flagged, please remove flag or try another cell")
+            return
+        if self.secret_gameboard[row_index][col_index] == "MINE!":
+            print("You hit a bomb! Gameover")
+            # TODO: Create method to end game
+            return
+        else:
+            self.shown_gameboard[row_index][col_index] = self.secret_gameboard[row_index][col_index]
 
 
 new_game = Minesweeper(5, 5)
-new_game.add_random_mines(5)
-# new_game.add_mine(0, 0)
-# new_game.add_mine(0, 1)
+# new_game.add_random_mines(5)
+new_game.add_mine(0, 0)
+new_game.add_mine(0, 1)
 # new_game.add_mine(1, 2)
 # new_game.add_mine(3, 4)
 print("Fresh secret gameboard:")
@@ -171,10 +184,23 @@ pprint(new_game.secret_gameboard)
 print("Initial shown gameboard:")
 pprint(new_game.shown_gameboard)
 
-# new_game.mark_flag(0, 0)
-# new_game.mark_flag(1, 1)
-# print("Shown gameboard after adding flags:")
-# pprint(new_game.shown_gameboard)
+new_game.add_flag(2, 2)
+new_game.add_flag(1, 1)
+print("Shown gameboard after adding flags:")
+pprint(new_game.shown_gameboard)
 #
-# new_game.remove_flag(0, 0)
+new_game.remove_flag(2, 2)
+print("Shown gameboard after removing flag:")
+pprint(new_game.shown_gameboard)
 # new_game.remove_flag(50, 50)
+
+new_game.reveal_hidden_cell(4, 4)
+print("Shown gameboard after revealing non-mined cell:")
+pprint(new_game.shown_gameboard)
+
+print("Trying to reveal flagged cell:")
+new_game.reveal_hidden_cell(1, 1)
+pprint(new_game.shown_gameboard)
+
+print("Revealing mined cell:")
+new_game.reveal_hidden_cell(0, 0)
