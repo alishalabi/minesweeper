@@ -28,7 +28,7 @@ class Minesweeper:
         self.width = width  # Total width of 2d array
         self.height = height  # Total height of 2d array
         self.number_of_mines = 0  # Total number of mines
-        self.gameboard = [[None for i in range(width)] for j in range(height)]
+        self.gameboard = [[0 for i in range(width)] for j in range(height)]
         self.all_directions = [
             (-1, 1),
             (-1, 0),
@@ -54,17 +54,18 @@ class Minesweeper:
         for i in range(len(self.gameboard)):
             for j in range(len(self.gameboard[i])):
                 # If cell is itself a mine, do nothing
-                if self.gameboard[i][j] == "X":
-                    pass
-                adjacenct_count = 0
-                valid_neighbors = self.get_valid_neighbors(i, j)
-                # print(f"Valid neighbors: {valid_neighbors}")
-                for x, y in valid_neighbors:
-                    print(f"x: {x}, y: {y}")
-                    if self.gameboard[x][y] == "X":
-                        adjacenct_count += 1
-                        # print(f"Adjacency count: {adjacenct_count}")
-                self.gameboard[i][j] = adjacenct_count
+                if self.gameboard[i][j] != "X":
+
+                    adjacenct_count = 0
+                    valid_neighbors = self.get_valid_neighbors(i, j)
+                    # print(f"Valid neighbors: {valid_neighbors}")
+                    for x, y in valid_neighbors:
+                        # print(f"x: {x}, y: {y}")
+                        # print(f"Gameboard at {x}, {y}: {self.gameboard[x][y]}")
+                        if self.gameboard[x][y] == "X":
+                            adjacenct_count += 1
+                            # print(f"Adjacency count: {adjacenct_count}")
+                    self.gameboard[i][j] = adjacenct_count
 
     # Helper function: is valid position
     def _is_valid(self, row_position, col_position):
