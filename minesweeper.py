@@ -15,6 +15,9 @@ Should yield:
 [0, 2, 2],
 [0, 1, x]]
 
+Step 2 - Create Obfuscated "Shown" Array: Allow users to add flags and reveal
+obfuscated cells on an obfuscated gameboard. Allow win and lose conditions
+
 """
 
 from pprint import pprint
@@ -29,7 +32,11 @@ class Minesweeper:
         self.width = width  # Total width of 2d array
         self.height = height  # Total height of 2d array
         self.number_of_mines = 0  # Total number of mines
-        self.gameboard = [[0 for i in range(width)] for j in range(height)]
+        self.number_of_flags = 0  # Total number of flags
+        self.secret_gameboard = [
+            [0 for i in range(width)] for j in range(height)]
+        self.shown_gameboard = [
+            ["HIDDEN" for i in range(width)] for j in range(height)]
         self.all_directions = [
             (-1, 1),
             (-1, 0),
@@ -40,18 +47,20 @@ class Minesweeper:
             (1, 1),
             (0, 1)
         ]
-        self.all_flags = []
+        self.all_flags = 0
+        self.all_shown = 0
 
     def add_mine(self, row_index, col_index):
         """
         Add a single mine at a specific, valid location
         """
         if self._is_valid(row_index, col_index):
-            self.gameboard[row_index][col_index] = "MINE!"
+            self.secret_gameboard[row_index][col_index] = "MINE!"
+            self.number_of_mines += 1
 
     def add_random_mines(self, num_mines):
         """
-        Add a random number of mines to the gameboard
+        Add a random number of mines to the secret gameboard
         Will use recursion
         """
         # Exit: have placed all mines
@@ -59,36 +68,34 @@ class Minesweeper:
             return
         # Get random x and y
         random_x = random.randrange(0, self.width)
-        print(random_x)
         random_y = random.randrange(0, self.height)
-        print(random_x)
         # If cell is already a mine, call function again without decreasing mines
-        if self.gameboard[random_x][random_y] == "MINE!":
+        if self.secret_gameboard[random_x][random_y] == "MINE!":
             return self.add_random_mines(num_mines)
         else:
-            self.gameboard[random_x][random_y] = "MINE!"
+            self.secret_gameboard[random_x][random_y] = "MINE!"
             return self.add_random_mines(num_mines - 1)
 
     def generate_all_adjacency(self):
         """
-        Generate adjacency board for each cell in gameboard
+        Generate adjacency board for each cell in secret gameboard
         """
         # Iterate through each cell
-        for i in range(len(self.gameboard)):
-            for j in range(len(self.gameboard[i])):
+        for i in range(len(self.secret_gameboard)):
+            for j in range(len(self.secret_gameboard[i])):
                 # If cell is itself a mine, do nothing
-                if self.gameboard[i][j] != "MINE!":
+                if self.secret_gameboard[i][j] != "MINE!":
 
                     adjacenct_count = 0
                     valid_neighbors = self.get_valid_neighbors(i, j)
                     # print(f"Valid neighbors: {valid_neighbors}")
                     for x, y in valid_neighbors:
                         # print(f"x: {x}, y: {y}")
-                        # print(f"Gameboard at {x}, {y}: {self.gameboard[x][y]}")
-                        if self.gameboard[x][y] == "MINE!":
+                        # print(f"secret_gameboard at {x}, {y}: {self.secret_gameboard[x][y]}")
+                        if self.secret_gameboard[x][y] == "MINE!":
                             adjacenct_count += 1
                             # print(f"Adjacency count: {adjacenct_count}")
-                    self.gameboard[i][j] = adjacenct_count
+                    self.secret_gameboard[i][j] = adjacenct_count
 
     def _is_valid(self, row_position, col_position):
         """
@@ -118,6 +125,37 @@ class Minesweeper:
 
         return all_neighbors
 
+    def mark_flag(self, row_index, col_index):
+        """
+        Place a flag in any valid cell on shown gameboard
+        """
+        if self._is_valid(row_index, col_index) and self.shown_gameboard[row_index][col_index] == "HIDDEN":
+            self.shown_gameboard[row_index][col_index] = "FLAG"
+            self.number_of_flags += 1
+            print(f"Flag marked at ({row_index}, {col_index})")
+        else:
+            print(
+                f"({row_index}, {col_index}) not a valid cell to add flag. Please enter valid x and y coordinates")
+
+    def remove_flag(self, row_index, col_index):
+        """
+        Remove a flag from a cell, re-obfuscate
+        """
+        if self._is_valid(row_index, col_index) and self.shown_gameboard[row_index][col_index] == "FLAG":
+            self.shown_gameboard[row_index][col_index] = "HIDDEN"
+            self.number_of_flags -= 1
+        else:
+            print(
+                f"({row_index}, {col_index}) not a valid cell to remove flag. Please enter valid x and y coordinates")
+
+    def reveal_hidden_cell(self, row_index, col_index):
+        """
+        Reveals cell on obfuscated gameboard.
+        If cell is mine: gameover
+        If cell is flagged: nothing will happen (prompt to remove flag)
+        If not flagged, not mine:
+        """
+
 
 new_game = Minesweeper(5, 5)
 new_game.add_random_mines(5)
@@ -125,9 +163,18 @@ new_game.add_random_mines(5)
 # new_game.add_mine(0, 1)
 # new_game.add_mine(1, 2)
 # new_game.add_mine(3, 4)
-print("Fresh gameboard:")
-pprint(new_game.gameboard)
-# print(f"Valid neighbors for (1, 1): {new_game.get_valid_neighbors(1, 1)}")
+print("Fresh secret gameboard:")
+pprint(new_game.secret_gameboard)
 new_game.generate_all_adjacency()
-print("Gameboard after adjacency")
-pprint(new_game.gameboard)
+print("Secret gameboard after adjacency:")
+pprint(new_game.secret_gameboard)
+print("Initial shown gameboard:")
+pprint(new_game.shown_gameboard)
+
+# new_game.mark_flag(0, 0)
+# new_game.mark_flag(1, 1)
+# print("Shown gameboard after adding flags:")
+# pprint(new_game.shown_gameboard)
+#
+# new_game.remove_flag(0, 0)
+# new_game.remove_flag(50, 50)
